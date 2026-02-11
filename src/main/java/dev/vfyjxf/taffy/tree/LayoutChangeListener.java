@@ -13,7 +13,7 @@ package dev.vfyjxf.taffy.tree;
  * <h2>Example: Collecting Dirty Nodes</h2>
  * <pre>{@code
  * Set<NodeId> dirtySet = new HashSet<>();
- * tree.setLayoutChangeListener((node, layout) -> {
+ * tree.setLayoutChangeListener((node, oldLayout, newLayout) -> {
  *     dirtySet.add(node);
  * });
  * 
@@ -31,7 +31,7 @@ package dev.vfyjxf.taffy.tree;
  * NodeId myRoot = ...;
  * AtomicBoolean rootChanged = new AtomicBoolean(false);
  * 
- * tree.setLayoutChangeListener((node, layout) -> {
+ * tree.setLayoutChangeListener((node, oldLayout, newLayout) -> {
  *     if (isDescendantOf(node, myRoot)) {
  *         rootChanged.set(true);
  *     }
@@ -52,7 +52,8 @@ public interface LayoutChangeListener {
      * layout depending on the tree's rounding configuration.
      * 
      * @param node the node whose layout changed
-     * @param layout the new layout of the node (may be null if layout was cleared)
+     * @param oldLayout the previous layout of the node before the change
+     * @param newLayout the new layout of the node (may be null if layout was cleared)
      */
-    void onLayoutChanged(NodeId node, Layout layout);
+    void onLayoutChanged(NodeId node, Layout oldLayout, Layout newLayout);
 }

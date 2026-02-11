@@ -575,7 +575,7 @@ public class TaffyTree {
      * Marks a node as having a new layout and propagates dirty flag up to ancestors.
      * Also notifies the layout change listener if one is set.
      */
-    private void markNodeLayoutUpdated(NodeId node, Layout layout) {
+    private void markNodeLayoutUpdated(NodeId node, Layout oldLayout, Layout newLayout) {
         NodeData data = nodes.get(node.getId());
         if (data == null) return;
         
@@ -583,7 +583,7 @@ public class TaffyTree {
         
         // Notify the layout change listener
         if (layoutChangeListener != null) {
-            layoutChangeListener.onLayoutChanged(node, layout);
+            layoutChangeListener.onLayoutChanged(node, oldLayout, newLayout);
         }
         
         // Propagate dirty descendant flag up to ancestors
@@ -606,10 +606,11 @@ public class TaffyTree {
     public void setLayout(NodeId node, Layout layout) {
         NodeData data = nodes.get(node.getId());
         if (data != null) {
+            Layout oldLayout = data.getFinalLayout();
             data.setFinalLayout(layout);
             // When rounding is enabled, mark after setting final layout
             if (useRounding) {
-                markNodeLayoutUpdated(node, layout);
+                markNodeLayoutUpdated(node, oldLayout, layout);
             }
         }
     }
@@ -620,10 +621,11 @@ public class TaffyTree {
     public void setUnroundedLayout(NodeId node, Layout layout) {
         NodeData data = nodes.get(node.getId());
         if (data != null) {
+            Layout oldLayout = data.getUnroundedLayout();
             data.setUnroundedLayout(layout);
             // When rounding is disabled, mark after setting unrounded layout
             if (!useRounding) {
-                markNodeLayoutUpdated(node, layout);
+                markNodeLayoutUpdated(node, oldLayout, layout);
             }
         }
     }

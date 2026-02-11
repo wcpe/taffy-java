@@ -419,9 +419,9 @@ public class LayoutUpdateTrackingTest {
             Set<NodeId> changedNodes = new HashSet<>();
             Map<NodeId, Layout> layouts = new HashMap<>();
 
-            tree.setLayoutChangeListener((node, layout) -> {
+            tree.setLayoutChangeListener((node, oldLayout, newLayout) -> {
                 changedNodes.add(node);
-                layouts.put(node, layout);
+                layouts.put(node, newLayout);
             });
 
             tree.computeLayout(root, TaffySize.maxContent());
@@ -451,7 +451,7 @@ public class LayoutUpdateTrackingTest {
             NodeId root = tree.newWithChildren(new TaffyStyle(), leaf1, leaf2);
 
             Set<NodeId> dirtySet = new HashSet<>();
-            tree.setLayoutChangeListener((node, layout) -> dirtySet.add(node));
+            tree.setLayoutChangeListener((node, oldLayout, newLayout) -> dirtySet.add(node));
 
             // Initial layout
             tree.computeLayout(root, TaffySize.of(AvailableSpace.definite(200), AvailableSpace.definite(200)));
@@ -473,7 +473,7 @@ public class LayoutUpdateTrackingTest {
             NodeId root = tree.newLeaf(new TaffyStyle());
 
             Set<NodeId> changedNodes = new HashSet<>();
-            tree.setLayoutChangeListener((node, layout) -> changedNodes.add(node));
+            tree.setLayoutChangeListener((node, oldLayout, newLayout) -> changedNodes.add(node));
 
             tree.computeLayout(root, TaffySize.maxContent());
             assertEquals(1, changedNodes.size());
@@ -498,9 +498,9 @@ public class LayoutUpdateTrackingTest {
             NodeId root = tree.newLeaf(style);
 
             Layout[] capturedLayout = new Layout[1];
-            tree.setLayoutChangeListener((node, layout) -> {
+            tree.setLayoutChangeListener((node, oldLayout, newLayout) -> {
                 if (node.equals(root)) {
-                    capturedLayout[0] = layout;
+                    capturedLayout[0] = newLayout;
                 }
             });
 
@@ -531,7 +531,7 @@ public class LayoutUpdateTrackingTest {
 
             // Track changes only within subRoot1 subtree
             Set<NodeId> dirtyInSubtree = new HashSet<>();
-            tree.setLayoutChangeListener((node, layout) -> {
+            tree.setLayoutChangeListener((node, oldLayout, newLayout) -> {
                 if (subRoot1Nodes.contains(node)) {
                     dirtyInSubtree.add(node);
                 }
