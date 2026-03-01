@@ -26,7 +26,50 @@ application {
 
 tasks.named('run') {
     workingDir = rootProject.projectDir.parentFile
+    def chromeBin = new File(rootProject.projectDir.parentFile, 'chrome/chrome-win64/chrome.exe').absolutePath
+    def chromeDriverBin = new File(rootProject.projectDir.parentFile, 'chrome/chromedriver-win64/chromedriver.exe').absolutePath
+    args = [
+        '--chromeBinary', chromeBin,
+        '--chromeDriver', chromeDriverBin
+    ]
 }
+
+// Task to generate only the WPT flex aspect-ratio tests
+tasks.register('genWptFixtures', JavaExec) {
+    group = 'generate'
+    description = 'Generate Java tests from WPT-converted fixture files only'
+    mainClass = 'dev.vfyjxf.taffy.gentest.TestGenerator'
+    classpath = sourceSets.main.runtimeClasspath
+    workingDir = rootProject.projectDir.parentFile
+    
+    def chromeBin = new File(rootProject.projectDir.parentFile, 'chrome/chrome-win64/chrome.exe').absolutePath
+    def chromeDriverBin = new File(rootProject.projectDir.parentFile, 'chrome/chromedriver-win64/chromedriver.exe').absolutePath
+    
+    args = [
+        '--chromeBinary', chromeBin,
+        '--chromeDriver', chromeDriverBin,
+        '--category', 'flex_aspect_ratio'
+    ]
+}
+// Task to convert WPT HTML to taffy fixture format
+tasks.register('convertWptToFixtures', JavaExec) {
+    group = 'generate'
+    description = 'Convert WPT HTML tests to taffy fixture format'
+    mainClass = 'dev.vfyjxf.taffy.gentest.WptToFixtureConverter'
+    classpath = sourceSets.main.runtimeClasspath
+    workingDir = rootProject.projectDir.parentFile
+    
+    def wptDir = new File(rootProject.projectDir.parentFile, 'css/css-sizing/aspect-ratio').absolutePath
+    def outputDir = new File(rootProject.projectDir.parentFile, 'taffy/test_fixtures/flex_aspect_ratio').absolutePath
+    
+    args = [
+        wptDir,
+        outputDir,
+        '--prefix', 'wpt_',
+        '--pattern', 'flex-aspect-ratio-*.html'
+    ]
+}
+
 // Task to regenerate WPT tests
 tasks.register('genWpt', JavaExec) {
     group = 'generate'
@@ -38,12 +81,16 @@ tasks.register('genWpt', JavaExec) {
     def wptRoot = rootProject.projectDir.parentFile.absolutePath
     def cssRoot = rootProject.projectDir.parentFile.absolutePath
     def outRoot = new File(rootProject.projectDir, 'src/test/java').absolutePath
+    def chromeBin = new File(rootProject.projectDir.parentFile, 'chrome/chrome-win64/chrome.exe').absolutePath
+    def chromeDriverBin = new File(rootProject.projectDir.parentFile, 'chrome/chromedriver-win64/chromedriver.exe').absolutePath
     
     args = [
         '--wptRoot', wptRoot,
         '--cssRoot', cssRoot,
         '--outRoot', outRoot,
         '--discover',
-        '--suites', 'css/css-grid,css/css-flexbox'
+        '--suites', 'css/css-sizing/aspect-ratio',
+        '--chromeBinary', chromeBin,
+        '--chromeDriver', chromeDriverBin
     ]
 }

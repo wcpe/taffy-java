@@ -137,8 +137,15 @@ public final class WptTestGenerator {
         String baseUrl = server.baseUrl();
         System.out.println("WPT HTTP base: " + baseUrl);
 
-        WebDriverManager.chromedriver().setup();
+        if (parsed.chromeDriver != null) {
+            System.setProperty("webdriver.chrome.driver", parsed.chromeDriver.toAbsolutePath().toString());
+        } else {
+            WebDriverManager.chromedriver().setup();
+        }
         ChromeOptions options = new ChromeOptions();
+        if (parsed.chromeBinary != null) {
+            options.setBinary(parsed.chromeBinary.toAbsolutePath().toString());
+        }
         options.addArguments(
             "--headless",
             "--disable-gpu",
@@ -174,6 +181,8 @@ public final class WptTestGenerator {
                     prefix = relNorm.substring("css/css-grid/".length());
                 } else if (relNorm.startsWith("css/css-flexbox/")) {
                     prefix = relNorm.substring("css/css-flexbox/".length());
+                } else if (relNorm.startsWith("css/css-sizing/aspect-ratio/")) {
+                    prefix = relNorm.substring("css/css-sizing/aspect-ratio/".length());
                 } else {
                     prefix = relNorm;
                 }
@@ -203,6 +212,7 @@ public final class WptTestGenerator {
                 String baseCls = switch (suite) {
                     case "grid" -> "WptGridTest";
                     case "flexbox" -> "WptFlexboxTest";
+                    case "sizing_aspect_ratio" -> "WptSizingAspectRatioTest";
                     default -> "WptTest";
                 };
 
@@ -1002,6 +1012,7 @@ public final class WptTestGenerator {
         String p = rel.replace('\\', '/');
         if (p.startsWith("css/css-grid/")) return "grid";
         if (p.startsWith("css/css-flexbox/")) return "flexbox";
+        if (p.startsWith("css/css-sizing/aspect-ratio/")) return "sizing_aspect_ratio";
         return null;
     }
 
@@ -1148,7 +1159,8 @@ public final class WptTestGenerator {
     private record Fixture(String relPath, Path path, String name) {}
 
     private record Args(Path wptRoot, Path allowlistFile, Path outputRoot, Path acceptedOut, Path cssRoot,
-                        boolean discover, List<String> suites, int maxFiles) {
+                        boolean discover, List<String> suites, int maxFiles,
+                        Path chromeBinary, Path chromeDriver) {
         static Args parse(String[] args) {
             Path wptRoot = null;
             Path allowlist = null;
@@ -1158,6 +1170,8 @@ public final class WptTestGenerator {
             boolean discover = false;
             List<String> suites = new ArrayList<>();
             int maxFiles = 0;
+            Path chromeBinary = null;
+            Path chromeDriver = null;
 
             for (int i = 0; i < args.length; i++) {
                 String a = Objects.toString(args[i], "").trim();
@@ -1195,6 +1209,14 @@ public final class WptTestGenerator {
                         if (i + 1 >= args.length) throw new IllegalArgumentException("--maxFiles requires a value");
                         maxFiles = Integer.parseInt(args[++i]);
                     }
+                    case "--chromeBinary" -> {
+                        if (i + 1 >= args.length) throw new IllegalArgumentException("--chromeBinary requires a value");
+                        chromeBinary = Paths.get(args[++i]);
+                    }
+                    case "--chromeDriver" -> {
+                        if (i + 1 >= args.length) throw new IllegalArgumentException("--chromeDriver requires a value");
+                        chromeDriver = Paths.get(args[++i]);
+                    }
                     default -> {
                         // ignore
                     }
@@ -1214,9 +1236,10 @@ public final class WptTestGenerator {
             if (suites.isEmpty()) {
                 suites.add("css/css-grid");
                 suites.add("css/css-flexbox");
+                suites.add("css/css-sizing/aspect-ratio");
             }
 
-            return new Args(wptRoot, allowlist, out, acceptedOut, cssRoot, discover, suites, maxFiles);
+            return new Args(wptRoot, allowlist, out, acceptedOut, cssRoot, discover, suites, maxFiles, chromeBinary, chromeDriver);
         }
     }
 
@@ -1376,9 +1399,9 @@ public final class WptTestGenerator {
             if (display != null) {
                 display = display.toLowerCase(Locale.ROOT);
                 s.display = switch (display) {
-                    case "flex" -> "FLEX";
-                    case "grid" -> "GRID";
-                    case "block", "flow-root" -> "BLOCK";
+                    case "flex", "inline-flex" -> "FLEX";
+                    case "grid", "inline-grid" -> "GRID";
+                    case "block", "flow-root", "inline-block" -> "BLOCK";
                     case "none" -> "NONE";
                     default -> null;
                 };
@@ -2405,14 +2428,45 @@ public final class WptTestGenerator {
         "    const original = getOriginalStyles(el);\n" +
         "    // Properties that should default to 'auto' when not explicitly set\n" +
         "    const insetProps = new Set(['left','right','top','bottom']);\n" +
-        "    // Merge: use original value if it contains 'auto', otherwise use computed\n" +
-        "    // For inset properties, if not explicitly set in CSS, use 'auto'\n" +
+        "    const sizeProps = new Set(['width','height']);\n" +
+        "    // Check if element has aspect-ratio set (from CSS or computed)\n" +
+        "    const hasAR = original['aspect-ratio'] || (computed['aspect-ratio'] && computed['aspect-ratio'] !== 'auto');\n" +
+        "    // Merge: use original value if it contains 'auto'/'content', otherwise use computed\n" +
         "    for (const p of props) {\n" +
-        "      if (original[p] && original[p].includes('auto')) {\n" +
+        "      if (original[p] && (original[p].includes('auto') || original[p].includes('content'))) {\n" +
         "        computed[p] = original[p];\n" +
         "      } else if (insetProps.has(p) && !original[p]) {\n" +
-        "        // Inset property not set in CSS - should be 'auto'\n" +
         "        computed[p] = 'auto';\n" +
+        "      } else if (sizeProps.has(p) && !original[p] && hasAR) {\n" +
+        "        // For elements with aspect-ratio, unspecified width/height must be 'auto'\n" +
+        "        // so the layout engine resolves them via the aspect-ratio, not a fixed value.\n" +
+        "        computed[p] = 'auto';\n" +
+        "      }\n" +
+        "    }\n" +
+        "    // flex-basis: content → convert to auto + clear main-axis dimension\n" +
+        "    const fb = (original['flex-basis'] || '').trim().toLowerCase();\n" +
+        "    if (fb === 'content') {\n" +
+        "      computed['flex-basis'] = 'auto';\n" +
+        "      // Determine parent's flex-direction to know main axis\n" +
+        "      if (parentIndex >= 0) {\n" +
+        "        const pfd = (nodes[parentIndex].computed['flex-direction'] || 'row').toLowerCase();\n" +
+        "        if (pfd === 'column' || pfd === 'column-reverse') {\n" +
+        "          computed['height'] = 'auto';\n" +
+        "        } else {\n" +
+        "          computed['width'] = 'auto';\n" +
+        "        }\n" +
+        "      }\n" +
+        "    }\n" +
+        "    // For <img> elements with width/height HTML attributes, derive aspect-ratio\n" +
+        "    if (el.tagName === 'IMG' && (!computed['aspect-ratio'] || computed['aspect-ratio'] === 'auto')) {\n" +
+        "      const aw = el.getAttribute('width');\n" +
+        "      const ah = el.getAttribute('height');\n" +
+        "      if (aw && ah) {\n" +
+        "        const nw = parseFloat(aw);\n" +
+        "        const nh = parseFloat(ah);\n" +
+        "        if (nw > 0 && nh > 0) {\n" +
+        "          computed['aspect-ratio'] = nw + ' / ' + nh;\n" +
+        "        }\n" +
         "      }\n" +
         "    }\n" +
         "    nodes.push({\n" +

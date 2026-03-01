@@ -3,11 +3,12 @@ plugins {
     id 'maven-publish'
     id 'me.champeau.jmh' version '0.7.2'
     id 'com.gradleup.shadow' version '9.2.0'
-    id "com.vanniktech.maven.publish" version "0.35.0"
+//    id "com.vanniktech.maven.publish" version "0.36.0"
+//    id 'signing'
 }
 
 group = 'dev.vfyjxf'
-version = '1.1.0'
+version = '1.1.4'
 
 repositories {
     mavenCentral()
@@ -87,3 +88,38 @@ publishing {
         mavenLocal()
     }
 }
+
+//signing {
+//    useGpgCmd()
+//    required = false
+//}
+
+//mavenPublishing {
+//    coordinates("dev.vfyjxf", "taffy", project.version)
+//    publishToMavenCentral()
+//    signAllPublications()
+//    pom {
+//        name = "Taffy-Java"
+//        description = "A pure Java implementation of the Taffy UI layout library, supporting CSS Flexbox, Grid, and Block layout algorithms."
+//        url = "https://github.com/vfyjxf/taffy-java"
+//        licenses {
+//            license {
+//                name = "MIT License"
+//                url = "https://github.com/vfyjxf/taffy-java/blob/main/LICENSE"
+//                distribution = "https://github.com/vfyjxf/taffy-java/blob/main/LICENSE"
+//            }
+//        }
+//        developers {
+//            developer {
+//                id = "vfyjxf"
+//                name = "vfyjxf"
+//                url = "https://github.com/vfyjxf"
+//            }
+//        }
+//        scm {
+//            url = "https://github.com/vfyjxf/taffy-java"
+//            connection = "scm:git:git://github.com/vfyjxf/taffy-java.git"
+//            developerConnection = "scm:git:ssh://git@github.com/vfyjxf/taffy-java.git"
+//        }
+//    }
+//}

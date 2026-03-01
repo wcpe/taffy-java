@@ -255,9 +255,9 @@ public class IntrinsicSizingKeywordsTest {
     class TypeEnumTests {
         
         @Test
-        @DisplayName("Dimension.Type contains all 8 types")
+        @DisplayName("Dimension.Type contains all 9 types")
         void testDimensionTypeCount() {
-            assertEquals(8, TaffyDimension.Type.values().length);
+            assertEquals(9, TaffyDimension.Type.values().length);
         }
         
         @Test
@@ -278,6 +278,7 @@ public class IntrinsicSizingKeywordsTest {
             assertEquals(TaffyDimension.Type.MAX_CONTENT, types[5]);
             assertEquals(TaffyDimension.Type.FIT_CONTENT, types[6]);
             assertEquals(TaffyDimension.Type.STRETCH, types[7]);
+            assertEquals(TaffyDimension.Type.CONTENT, types[8]);
         }
     }
     

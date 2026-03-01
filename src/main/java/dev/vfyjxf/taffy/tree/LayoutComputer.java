@@ -473,11 +473,20 @@ public class LayoutComputer {
         width = TaffyMath.clamp(width, minSize.width, maxSize.width);
         height = TaffyMath.clamp(height, minSize.height, maxSize.height);
 
-        // Apply aspect-ratio: height = max(clamped_height, width / aspect_ratio)
-        // This matches Rust: height: f32_max(clamped_size.height, aspect_ratio.map(|ratio| clamped_size.width / ratio).unwrap_or(0.0))
+        // Apply aspect-ratio enforcement.
+        // When one dimension is known (from knownDimensions or style) and the other is auto/measured,
+        // derive the auto dimension from the known one via aspect ratio.
         if (aspectRatio != null && !Float.isNaN(aspectRatio)) {
+            // Derive height from width (existing behavior)
             float aspectHeight = width / aspectRatio;
             height = Math.max(height, aspectHeight);
+
+            // Derive width from height when height is known but width was auto/measured
+            // This fixes aspect-ratio in flex row items where cross (height) is known
+            if (!Float.isNaN(styledBasedKnownDimensions.height) && Float.isNaN(styledBasedKnownDimensions.width)) {
+                float aspectWidth = height * aspectRatio;
+                width = Math.max(width, aspectWidth);
+            }
         }
 
         // Ensure size is at least padding + border (WITHOUT scrollbar)

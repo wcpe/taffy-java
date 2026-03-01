@@ -224,7 +224,15 @@ public class BlockComputer {
 
         float containerOuterHeight = styledBasedKnownDimensions.height;
         if (Float.isNaN(containerOuterHeight)) {
-            containerOuterHeight = TaffyMath.clamp(layoutResult.contentHeight, minSize.height, maxSize.height);
+            float contentHeight = layoutResult.contentHeight;
+            // Apply aspect-ratio: when height is auto and width is known, derive height from AR.
+            // AR applies to the content box, so subtract/add box-sizing adjustment.
+            if (!Float.isNaN(aspectRatio) && !Float.isNaN(containerOuterWidth)) {
+                float arDerivedHeight = (containerOuterWidth - boxSizingAdjustment.width) / aspectRatio
+                                        + boxSizingAdjustment.height;
+                contentHeight = Math.max(contentHeight, arDerivedHeight);
+            }
+            containerOuterHeight = TaffyMath.clamp(contentHeight, minSize.height, maxSize.height);
             containerOuterHeight = Math.max(containerOuterHeight, !Float.isNaN(paddingBorderSize.height) ? paddingBorderSize.height : 0);
         }
 

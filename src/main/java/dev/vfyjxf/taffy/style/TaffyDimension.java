@@ -45,7 +45,11 @@ public final class TaffyDimension {
          * CSS stretch / -webkit-fill-available: fill the available space.
          * The box expands to fill the available space in the containing block.
          */
-        STRETCH
+        STRETCH,
+        /**
+         * CSS flex-basis: content. Uses the item's content-based automatic size.
+         */
+        CONTENT
     }
 
     private final Type type;
@@ -126,6 +130,13 @@ public final class TaffyDimension {
         return STRETCH;
     }
 
+    /**
+     * Creates a content value (for flex-basis: content).
+     */
+    public static TaffyDimension content() {
+        return CONTENT;
+    }
+
     /** Zero length */
     public static final TaffyDimension ZERO = length(0);
     
@@ -143,6 +154,9 @@ public final class TaffyDimension {
     
     /** Stretch value singleton */
     public static final TaffyDimension STRETCH = new TaffyDimension(Type.STRETCH, 0);
+    
+    /** Content value singleton (for flex-basis: content) */
+    public static final TaffyDimension CONTENT = new TaffyDimension(Type.CONTENT, 0);
 
     /**
      * Convert from LengthPercentage
@@ -249,11 +263,18 @@ public final class TaffyDimension {
     }
     
     /**
+     * Returns true if this is content (flex-basis: content)
+     */
+    public boolean isContent() {
+        return type == Type.CONTENT;
+    }
+    
+    /**
      * Returns true if this is an intrinsic sizing keyword (min-content, max-content, fit-content, stretch)
      */
     public boolean isIntrinsic() {
         return type == Type.MIN_CONTENT || type == Type.MAX_CONTENT || 
-               type == Type.FIT_CONTENT || type == Type.STRETCH;
+               type == Type.FIT_CONTENT || type == Type.STRETCH || type == Type.CONTENT;
     }
 
     /**
@@ -274,7 +295,7 @@ public final class TaffyDimension {
         return switch (type) {
             case LENGTH -> value;
             case PERCENT -> Float.isNaN(context) ? Float.NaN : context * value;
-            case AUTO, MIN_CONTENT, MAX_CONTENT, FIT_CONTENT, STRETCH -> Float.NaN;
+            case AUTO, MIN_CONTENT, MAX_CONTENT, FIT_CONTENT, STRETCH, CONTENT -> Float.NaN;
             case CALC -> Float.isNaN(context) ? Float.NaN : (calcExpression != null ? calcExpression.resolve(context) : 0f);
         };
     }
@@ -295,7 +316,7 @@ public final class TaffyDimension {
         if (type != that.type) return false;
         // For singleton types, type equality is sufficient
         if (type == Type.AUTO || type == Type.MIN_CONTENT || type == Type.MAX_CONTENT || 
-            type == Type.FIT_CONTENT || type == Type.STRETCH) return true;
+            type == Type.FIT_CONTENT || type == Type.STRETCH || type == Type.CONTENT) return true;
         if (type == Type.CALC) return Objects.equals(calcExpression, that.calcExpression);
         return Float.compare(value, that.value) == 0;
     }
@@ -319,6 +340,7 @@ public final class TaffyDimension {
             case MAX_CONTENT -> "max-content";
             case FIT_CONTENT -> "fit-content";
             case STRETCH -> "stretch";
+            case CONTENT -> "content";
         };
     }
 }
