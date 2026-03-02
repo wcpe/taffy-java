@@ -919,13 +919,24 @@ public class FlexboxComputer {
                     // Compute effective min: max(style_min, flex_basis_min, resolved_minimum_main_size)
                     float minMainSize = item.resolvedMinimumMainSize;
                     if (!Float.isNaN(styleMinMain)) minMainSize = Math.max(minMainSize, styleMinMain);
-                    if (!Float.isNaN(flexBasisMin)) minMainSize = Math.max(minMainSize, flexBasisMin);
 
                     // Compute effective max: min(style_max, flex_basis_max) or infinity
                     float maxMainSize = POSITIVE_INFINITY;
                     if (!Float.isNaN(styleMaxMain)) maxMainSize = styleMaxMain;
                     if (!Float.isNaN(flexBasisMax)) {
                         maxMainSize = Math.min(maxMainSize, flexBasisMax);
+                    }
+
+                    if (!Float.isNaN(flexBasisMin)) {
+                        float cappedFlexBasisMin = maxMainSize != POSITIVE_INFINITY
+                                                   ? Math.min(flexBasisMin, maxMainSize)
+                                                   : flexBasisMin;
+                        minMainSize = Math.max(minMainSize, cappedFlexBasisMin);
+                    }
+
+                    float intrinsicFlexBasis = item.flexBasis;
+                    if (maxMainSize != POSITIVE_INFINITY) {
+                        intrinsicFlexBasis = Math.min(intrinsicFlexBasis, maxMainSize);
                     }
 
                     float contentContribution;
@@ -940,7 +951,7 @@ public class FlexboxComputer {
                         contentContribution = minMainSize + marginMain;
                     } else if (item.overflow.x != Overflow.VISIBLE || item.overflow.y != Overflow.VISIBLE) {
                         // Scroll container: use flex-basis
-                        contentContribution = item.flexBasis + marginMain;
+                        contentContribution = intrinsicFlexBasis + marginMain;
                     } else {
                         // Measure child content size in main axis
                         AvailableSpace outerCrossAvail = isRow ? availableSpace.height : availableSpace.width;
@@ -1024,7 +1035,7 @@ public class FlexboxComputer {
 
                     // Calculate content_flex_fraction
                     // This represents the "flex fraction" needed to size the item to its content contribution
-                    float diff = contentContribution - item.flexBasis;
+                    float diff = contentContribution - intrinsicFlexBasis;
                     if (diff > 0.0f) {
                         item.contentFlexFraction = diff / Math.max(1.0f, item.flexGrow);
                     } else if (diff < 0.0f) {
@@ -1053,7 +1064,21 @@ public class FlexboxComputer {
                         flexContribution = 0.0f;
                     }
 
-                    float itemSize = item.flexBasis + flexContribution;
+                    float styleMaxMain = isRow ? item.maxSize.width : item.maxSize.height;
+                    float maxMainSize = POSITIVE_INFINITY;
+                    if (!Float.isNaN(styleMaxMain)) maxMainSize = styleMaxMain;
+                    if (item.flexGrow == 0f) {
+                        float stylePreferredMain = isRow ? item.size.width : item.size.height;
+                        float clampingBasis = !Float.isNaN(stylePreferredMain)
+                                              ? Math.max(item.flexBasis, stylePreferredMain)
+                                              : item.flexBasis;
+                        maxMainSize = Math.min(maxMainSize, clampingBasis);
+                    }
+                    float intrinsicFlexBasis = item.flexBasis;
+                    if (maxMainSize != POSITIVE_INFINITY) {
+                        intrinsicFlexBasis = Math.min(intrinsicFlexBasis, maxMainSize);
+                    }
+                    float itemSize = intrinsicFlexBasis + flexContribution;
 
                     // Update item's target sizes (used later in layout)
                     if (isRow) {

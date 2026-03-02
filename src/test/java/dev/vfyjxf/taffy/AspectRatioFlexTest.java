@@ -590,4 +590,53 @@ public class AspectRatioFlexTest {
         assertEquals(100.0f, childLayout.size().width, EPSILON, "width from AR * height");
         assertEquals(50.0f, childLayout.size().height, EPSILON, "explicit height");
     }
+    @Test
+    @DisplayName("parent_auto_height_child_ar_maxsize_with_padding")
+    void parentAutoHeightChildArMaxsizeWithPadding() {
+        TaffyTree tree = new TaffyTree();
+
+        // Child: width=100%, maxSize(100,100), AR=1
+        TaffyStyle childStyle = new TaffyStyle();
+        childStyle.flexDirection = FlexDirection.COLUMN;
+        childStyle.flexShrink = 0;
+        childStyle.minSize = TaffySize.all(TaffyDimension.ZERO);
+        childStyle.alignContent = AlignContent.FLEX_START;
+        childStyle.size = new TaffySize<>(TaffyDimension.percent(1.0f), TaffyDimension.AUTO);
+        childStyle.maxSize = new TaffySize<>(TaffyDimension.length(100.0f), TaffyDimension.length(100.0f));
+        childStyle.aspectRatio = 1.0f;
+        NodeId child = tree.newLeaf(childStyle);
+
+        // Parent: auto size with padding
+        TaffyStyle parentStyle = new TaffyStyle();
+        parentStyle.flexDirection = FlexDirection.COLUMN;
+        parentStyle.flexShrink = 0;
+        parentStyle.minSize = TaffySize.all(TaffyDimension.ZERO);
+        parentStyle.alignContent = AlignContent.FLEX_START;
+        parentStyle.padding = TaffyRect.all(LengthPercentage.length(5));
+        NodeId parent = tree.newWithChildren(parentStyle, child);
+
+        // Root: definite size + padding + gap
+        TaffyStyle rootStyle = new TaffyStyle();
+        rootStyle.flexDirection = FlexDirection.COLUMN;
+        rootStyle.flexShrink = 0;
+        rootStyle.minSize = TaffySize.all(TaffyDimension.ZERO);
+        rootStyle.alignContent = AlignContent.FLEX_START;
+        rootStyle.size = new TaffySize<>(TaffyDimension.length(300.0f), TaffyDimension.length(300.0f));
+        rootStyle.padding = TaffyRect.all(LengthPercentage.length(4));
+        rootStyle.gap = TaffySize.all(LengthPercentage.length(3));
+        NodeId root = tree.newWithChildren(rootStyle, parent);
+
+        tree.computeLayout(root, new TaffySize<>(
+            AvailableSpace.definite(300.0f),
+            AvailableSpace.definite(300.0f)
+        ));
+
+        Layout parentLayout = tree.getLayout(parent);
+        Layout childLayout = tree.getLayout(child);
+
+        assertEquals(100.0f, childLayout.size().width, EPSILON, "child width clamped by max");
+        assertEquals(100.0f, childLayout.size().height, EPSILON, "child height from AR");
+        assertEquals(110.0f, parentLayout.size().height, EPSILON,
+            "parent auto height should be child height + padding (100 + 10)");
+    }
 }

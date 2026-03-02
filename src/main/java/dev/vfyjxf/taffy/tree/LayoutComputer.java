@@ -298,9 +298,8 @@ public class LayoutComputer {
         FloatSize boxSizingAdjustment = style.getBoxSizing() == BoxSizing.CONTENT_BOX
                                         ? paddingBorderSize
                                         : new FloatSize(0f, 0f);
-
-        // For ContentSize mode, we ignore min/max sizes (like taffy does)
-        // These should only be applied when computing inherent size
+        // For ContentSize mode, we ignore min-size and explicit size; max-size still clamps content contributions.
+        // These should only be applied when computing inherent size (except max-size clamping).
         SizingMode sizingMode = inputs.sizingMode();
 
         FloatSize minSize;
@@ -312,14 +311,13 @@ public class LayoutComputer {
         // Keep raw resolved min/max (before aspect-ratio expansion) so we can implement "fill_*" aspect-ratio behavior
         // when only one axis is specified.
         FloatSize resolvedMinSizeRaw;
-        FloatSize resolvedMaxSizeRaw;
+        FloatSize resolvedMaxSizeRaw = Resolve.maybeResolveSize(style.getMaxSize(), parentSize);
 
         if (sizingMode == SizingMode.CONTENT_SIZE) {
-            // In ContentSize mode, we ignore all size styles (min/max/size).
-            // Callers using CONTENT_SIZE provide knownDimensions when needed.
-            // Per Rust leaf.rs: node_size = known_dimensions, node_min_size = Size::NONE, node_max_size = Size::NONE
+            // In ContentSize mode, we ignore min-size and explicit size; callers provide knownDimensions when needed.
+            // Max-size still clamps intrinsic contributions to avoid over-inflation.
             minSize = new FloatSize(Float.NaN, Float.NaN);
-            maxSize = new FloatSize(Float.NaN, Float.NaN);
+            maxSize = maybeAdd(resolvedMaxSizeRaw, boxSizingAdjustment);
 
             // Ignore style "size" here; callers using CONTENT_SIZE typically provide knownDimensions when needed.
             styledBasedKnownDimensions = knownDimensions;
@@ -327,7 +325,6 @@ public class LayoutComputer {
             nodeMinSize = new FloatSize(Float.NaN, Float.NaN);
         } else {
             resolvedMinSizeRaw = Resolve.maybeResolveSize(style.getMinSize(), parentSize);
-            resolvedMaxSizeRaw = Resolve.maybeResolveSize(style.getMaxSize(), parentSize);
 
             minSize = Resolve.maybeApplyAspectRatio(resolvedMinSizeRaw, aspectRatio);
             minSize = maybeAdd(minSize, boxSizingAdjustment);
