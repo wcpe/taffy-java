@@ -3,6 +3,8 @@ package dev.vfyjxf.taffy.tree;
 import dev.vfyjxf.taffy.geometry.FloatPoint;
 import dev.vfyjxf.taffy.geometry.FloatSize;
 
+import java.util.Objects;
+
 /**
  * A struct containing the result of laying a single node, which is returned up to the parent node.
  *
@@ -13,19 +15,74 @@ import dev.vfyjxf.taffy.geometry.FloatSize;
  * @param bottomMargin              Bottom margin that can be collapsed with. Used for CSS block layout margin collapsing.
  * @param marginsCanCollapseThrough Whether margins can be collapsed through this node. Used for CSS block layout.
  */
-public record LayoutOutput(
-    FloatSize size,
-    FloatSize contentSize,
-    FloatPoint firstBaselines,
-    CollapsibleMarginSet topMargin,
-    CollapsibleMarginSet bottomMargin,
-    boolean marginsCanCollapseThrough
-) {
+public final class LayoutOutput {
+
+    private final FloatSize size;
+    private final FloatSize contentSize;
+    private final FloatPoint firstBaselines;
+    private final CollapsibleMarginSet topMargin;
+    private final CollapsibleMarginSet bottomMargin;
+    private final boolean marginsCanCollapseThrough;
 
     /**
      * Create a new LayoutOutput
      */
-    public LayoutOutput {
+    public LayoutOutput(
+        FloatSize size,
+        FloatSize contentSize,
+        FloatPoint firstBaselines,
+        CollapsibleMarginSet topMargin,
+        CollapsibleMarginSet bottomMargin,
+        boolean marginsCanCollapseThrough
+    ) {
+        this.size = size;
+        this.contentSize = contentSize;
+        this.firstBaselines = firstBaselines;
+        this.topMargin = topMargin;
+        this.bottomMargin = bottomMargin;
+        this.marginsCanCollapseThrough = marginsCanCollapseThrough;
+    }
+
+    public FloatSize size() {
+        return size;
+    }
+
+    public FloatSize contentSize() {
+        return contentSize;
+    }
+
+    public FloatPoint firstBaselines() {
+        return firstBaselines;
+    }
+
+    public CollapsibleMarginSet topMargin() {
+        return topMargin;
+    }
+
+    public CollapsibleMarginSet bottomMargin() {
+        return bottomMargin;
+    }
+
+    public boolean marginsCanCollapseThrough() {
+        return marginsCanCollapseThrough;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        LayoutOutput that = (LayoutOutput) o;
+        return marginsCanCollapseThrough == that.marginsCanCollapseThrough
+            && Objects.equals(size, that.size)
+            && Objects.equals(contentSize, that.contentSize)
+            && Objects.equals(firstBaselines, that.firstBaselines)
+            && Objects.equals(topMargin, that.topMargin)
+            && Objects.equals(bottomMargin, that.bottomMargin);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(size, contentSize, firstBaselines, topMargin, bottomMargin, marginsCanCollapseThrough);
     }
 
     /**

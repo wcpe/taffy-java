@@ -16,9 +16,23 @@ repositories {
 
 java {
     toolchain {
-        languageVersion = JavaLanguageVersion.of(17)
+        languageVersion = JavaLanguageVersion.of(8)
     }
     withSourcesJar()
+}
+
+// 主源码降级到 Java 8（供 JVM 8 消费方内联）；但测试源仍使用 Java 16+ 语法（record/switch 表达式等），
+// 故测试的编译与运行单独固定到 Java 17 工具链：Java 17 既能编译现代语法，又能在 Java 8 字节码的主类上运行，
+// 以此在不改写 40 个测试文件的前提下完整验证 Java 8 主源码的行为等价性。
+tasks.named('compileTestJava') {
+    javaCompiler = javaToolchains.compilerFor {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
+tasks.named('test') {
+    javaLauncher = javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
 }
 
 dependencies {
@@ -70,7 +84,6 @@ test {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = "UTF-8"
-    options.release = 17
 }
 
 
