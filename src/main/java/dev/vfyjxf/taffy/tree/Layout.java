@@ -3,8 +3,8 @@ package dev.vfyjxf.taffy.tree;
 import dev.vfyjxf.taffy.geometry.FloatPoint;
 import dev.vfyjxf.taffy.geometry.FloatRect;
 import dev.vfyjxf.taffy.geometry.FloatSize;
-
-import java.util.Objects;
+import lombok.Value;
+import lombok.experimental.Accessors;
 
 /**
  * The final result of a layout algorithm for a single node.
@@ -19,7 +19,11 @@ import java.util.Objects;
  * @param padding       The size of the padding of the node
  * @param margin        The size of the margin of the node
  */
-public final class Layout {
+@Value
+@Accessors(fluent = true)
+// 本类另有无参 / 单参便捷构造器，@Value 因此不会自动生成全字段构造器，显式补上以供 8 参调用方使用。
+@lombok.AllArgsConstructor
+public class Layout {
 
     private final int order;
     private final FloatPoint location;
@@ -29,26 +33,6 @@ public final class Layout {
     private final FloatRect border;
     private final FloatRect padding;
     private final FloatRect margin;
-
-    public Layout(
-        int order,
-        FloatPoint location,
-        FloatSize size,
-        FloatSize contentSize,
-        FloatSize scrollbarSize,
-        FloatRect border,
-        FloatRect padding,
-        FloatRect margin
-    ) {
-        this.order = order;
-        this.location = location;
-        this.size = size;
-        this.contentSize = contentSize;
-        this.scrollbarSize = scrollbarSize;
-        this.border = border;
-        this.padding = padding;
-        this.margin = margin;
-    }
 
     /**
      * Creates a new zero-Layout
@@ -138,64 +122,4 @@ public final class Layout {
                            - size.height + border.bottom);
     }
 
-    // === Getter methods ===
-
-    public int order() {
-        return order;
-    }
-
-    public FloatPoint location() {
-        return location;
-    }
-
-    public FloatSize size() {
-        return size;
-    }
-
-    public FloatSize contentSize() {
-        return contentSize;
-    }
-
-    public FloatSize scrollbarSize() {
-        return scrollbarSize;
-    }
-
-    public FloatRect border() {
-        return border;
-    }
-
-    public FloatRect padding() {
-        return padding;
-    }
-
-    public FloatRect margin() {
-        return margin;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Layout other = (Layout) o;
-        return order == other.order
-               && Objects.equals(location, other.location)
-               && Objects.equals(size, other.size)
-               && Objects.equals(contentSize, other.contentSize)
-               && Objects.equals(scrollbarSize, other.scrollbarSize)
-               && Objects.equals(border, other.border)
-               && Objects.equals(padding, other.padding)
-               && Objects.equals(margin, other.margin);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(order, location, size, contentSize, scrollbarSize, border, padding, margin);
-    }
-
-    @Override
-    public String toString() {
-        return "Layout[order=" + order + ", location=" + location + ", size=" + size
-               + ", contentSize=" + contentSize + ", scrollbarSize=" + scrollbarSize
-               + ", border=" + border + ", padding=" + padding + ", margin=" + margin + "]";
-    }
 }

@@ -4,8 +4,8 @@ import dev.vfyjxf.taffy.geometry.FloatSize;
 import dev.vfyjxf.taffy.geometry.TaffyLine;
 import dev.vfyjxf.taffy.geometry.TaffySize;
 import dev.vfyjxf.taffy.style.AvailableSpace;
-
-import java.util.Objects;
+import lombok.Value;
+import lombok.experimental.Accessors;
 
 /**
  * A struct containing the input constraints/hints for laying out a node, which are passed in by the parent.
@@ -18,61 +18,17 @@ import java.util.Objects;
  * @param availableSpace                Available space represents an amount of space to layout into, and is used as a soft constraint for wrapping.
  * @param verticalMarginsAreCollapsible Specific to CSS Block layout. Used for correctly computing margin collapsing.
  */
-public final class LayoutInput {
+@Value
+@Accessors(fluent = true)
+public class LayoutInput {
 
-    private final RunMode runMode;
-    private final SizingMode sizingMode;
-    private final RequestedAxis axis;
-    private final FloatSize knownDimensions;
-    private final FloatSize parentSize;
-    private final TaffySize<AvailableSpace> availableSpace;
-    private final TaffyLine<Boolean> verticalMarginsAreCollapsible;
-
-    public LayoutInput(
-        RunMode runMode,
-        SizingMode sizingMode,
-        RequestedAxis axis,
-        FloatSize knownDimensions,
-        FloatSize parentSize,
-        TaffySize<AvailableSpace> availableSpace,
-        TaffyLine<Boolean> verticalMarginsAreCollapsible
-    ) {
-        this.runMode = runMode;
-        this.sizingMode = sizingMode;
-        this.axis = axis;
-        this.knownDimensions = knownDimensions;
-        this.parentSize = parentSize;
-        this.availableSpace = availableSpace;
-        this.verticalMarginsAreCollapsible = verticalMarginsAreCollapsible;
-    }
-
-    public RunMode runMode() {
-        return runMode;
-    }
-
-    public SizingMode sizingMode() {
-        return sizingMode;
-    }
-
-    public RequestedAxis axis() {
-        return axis;
-    }
-
-    public FloatSize knownDimensions() {
-        return knownDimensions;
-    }
-
-    public FloatSize parentSize() {
-        return parentSize;
-    }
-
-    public TaffySize<AvailableSpace> availableSpace() {
-        return availableSpace;
-    }
-
-    public TaffyLine<Boolean> verticalMarginsAreCollapsible() {
-        return verticalMarginsAreCollapsible;
-    }
+    RunMode runMode;
+    SizingMode sizingMode;
+    RequestedAxis axis;
+    FloatSize knownDimensions;
+    FloatSize parentSize;
+    TaffySize<AvailableSpace> availableSpace;
+    TaffyLine<Boolean> verticalMarginsAreCollapsible;
 
     /**
      * Create a LayoutInput for hidden layout
@@ -124,30 +80,5 @@ public final class LayoutInput {
             availableSpace,
             this.verticalMarginsAreCollapsible
         );
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        LayoutInput that = (LayoutInput) o;
-        return Objects.equals(runMode, that.runMode)
-            && Objects.equals(sizingMode, that.sizingMode)
-            && Objects.equals(axis, that.axis)
-            && Objects.equals(knownDimensions, that.knownDimensions)
-            && Objects.equals(parentSize, that.parentSize)
-            && Objects.equals(availableSpace, that.availableSpace)
-            && Objects.equals(verticalMarginsAreCollapsible, that.verticalMarginsAreCollapsible);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(runMode, sizingMode, axis, knownDimensions, parentSize, availableSpace, verticalMarginsAreCollapsible);
-    }
-
-    @Override
-    public String toString() {
-        return "LayoutInput{runMode=" + runMode + ", knownDimensions=" + knownDimensions +
-               ", availableSpace=" + availableSpace + "}";
     }
 }

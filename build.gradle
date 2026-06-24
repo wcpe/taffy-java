@@ -39,6 +39,11 @@ dependencies {
 //    implementation 'org.jetbrains:annotations:25.0.0'
     implementation("it.unimi.dsi:fastutil:8.5.12")
 
+    // Lombok：以 @Value/@Getter(fluent) 等消除 Java 8 降级（record→类）产生的 getter/equals/hashCode 样板。
+    // 编译期注解处理器，产出纯 Java 8 字节码，不引入运行期依赖。
+    compileOnly("org.projectlombok:lombok:1.18.34")
+    annotationProcessor("org.projectlombok:lombok:1.18.34")
+
 
     testImplementation platform('org.junit:junit-bom:5.10.0')
     testImplementation 'org.junit.jupiter:junit-jupiter'

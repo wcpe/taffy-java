@@ -1,22 +1,17 @@
 package dev.vfyjxf.taffy.tree;
 
-import java.util.Objects;
+import lombok.Value;
+import lombok.experimental.Accessors;
 
 /**
  * A type representing the id of a single node in a tree of nodes.
  * Internally it is a wrapper around a long value.
  */
-public final class NodeId {
+@Value
+@Accessors(fluent = true)
+public class NodeId {
 
-    private final long value;
-
-    public NodeId(long value) {
-        this.value = value;
-    }
-
-    public long value() {
-        return value;
-    }
+    long value;
 
     /**
      * Create a new NodeId from a long value
@@ -37,23 +32,5 @@ public final class NodeId {
      */
     public int toIndex() {
         return (int) value;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        NodeId that = (NodeId) o;
-        return value == that.value;
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(value);
-    }
-
-    @Override
-    public String toString() {
-        return "NodeId[value=" + value + "]";
     }
 }
